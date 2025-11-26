@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>综合学习乐园 (V12_Fixed)</title>
+    <title>综合学习乐园 (V13_AutoLoad)</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
         :root {
@@ -38,25 +38,18 @@
 
         h1 { margin: 5px 0 15px 0; font-size: 1.5em; color: var(--char-color); }
         
-        /* 按钮样式：小巧精致 */
         .btn { 
-            width: 100%; 
-            padding: 10px 0; 
-            font-size: 1em; 
-            font-weight: 600; 
+            width: 100%; padding: 10px 0; font-size: 1em; font-weight: 600; 
             color: white; border: none; border-radius: 8px; cursor: pointer; 
-            transition: opacity 0.2s; 
-            -webkit-tap-highlight-color: transparent;
+            transition: opacity 0.2s; -webkit-tap-highlight-color: transparent;
         }
         .btn:active { opacity: 0.8; transform: scale(0.98); }
         .btn-lg { font-size: 1.05em; padding: 12px 0; }
-
         .btn-primary { background-color: var(--blue-color); } 
         .btn-warning { background-color: var(--yellow-color); color: #fff; } 
         .btn-danger { background-color: var(--red-color); } 
         .btn-secondary { background-color: var(--gray-color); } 
         .btn-success { background-color: var(--green-color); }
-        
         .btn-group { display: flex; gap: 15px; margin-top: 10px; }
         .btn-group .btn { margin: 0; flex: 1; }
 
@@ -67,69 +60,31 @@
         summary::-webkit-details-marker { display: none; }
         .details-content { padding: 15px; border-top: 1px solid #eee; }
         
-        /* --- 核心展示区域 --- */
         #char-display-container { 
-            position: relative; 
-            width: 100%; 
-            margin: 20px 0 30px 0; 
-            min-height: 160px;
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+            position: relative; width: 100%; margin: 20px 0 30px 0; 
+            min-height: 160px; display: flex; justify-content: center; align-items: center; 
         }
+        #stats { position: absolute; top: -35px; right: 0; font-size: 0.85em; color: #999; }
+        #char-display { display: flex; flex-direction: row; justify-content: center; align-items: center; flex-wrap: wrap; gap: 4px; width: 100%; }
 
-        #stats { 
-            position: absolute; top: -35px; right: 0; 
-            font-size: 0.85em; color: #999; 
-        }
-
-        #char-display { 
-            display: flex; 
-            flex-direction: row; 
-            justify-content: center; 
-            align-items: center; 
-            flex-wrap: wrap; 
-            gap: 4px; 
-            width: 100%;
-        }
-
-        /* 汉字容器：大尺寸 */
+        /* 汉字容器样式 */
         .char-cell-container { 
-            position: relative; 
-            display: flex; justify-content: center; align-items: center; 
-            flex-shrink: 0;
-            width: calc(25% - 4px); /* 4个一行 */
-            aspect-ratio: 1 / 1; 
-            max-width: 120px; 
+            position: relative; display: flex; justify-content: center; align-items: center; flex-shrink: 0;
+            width: calc(25% - 4px); aspect-ratio: 1 / 1; max-width: 120px; 
         }
-
         .char-cell-grid { position: absolute; width: 100%; height: 100%; border: 2px solid var(--grid-color); }
         .char-cell-grid::before { content: ''; position: absolute; width: 1px; height: 100%; top: 0; left: 50%; background: var(--grid-color); transform: translateX(-50%); }
         .char-cell-grid::after { content: ''; position: absolute; height: 1px; width: 100%; top: 50%; left: 0; background: var(--grid-color); transform: translateY(-50%); }
-
-        .char-cell-text { 
-            position: relative; 
-            font-family: var(--font-char); 
-            line-height: 1;
-            z-index: 2;
-            color: var(--char-color);
-            font-size: 19vw; /* 极大字体 */
-        }
+        .char-cell-text { position: relative; font-family: var(--font-char); line-height: 1; z-index: 2; color: var(--char-color); font-size: 19vw; }
         
-        @media (min-width: 500px) {
-            .char-cell-text { font-size: 90px; }
-            .char-cell-container { height: 120px; } 
-        }
+        @media (min-width: 500px) { .char-cell-text { font-size: 90px; } .char-cell-container { height: 120px; } }
 
         .char-item-latin { 
-            font-family: var(--font-latin); 
-            font-weight: bold; text-align: center; color: var(--char-color);
-            font-size: clamp(3rem, 12vw, 5rem); 
-            width: 100%;
+            font-family: var(--font-latin); font-weight: bold; text-align: center; color: var(--char-color);
+            font-size: clamp(3rem, 12vw, 5rem); width: 100%;
         }
         .char-item-latin.is-pinyin { font-weight: normal; }
 
-        /* 列表 */
         #bank-selection-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
         .bank-item { padding: 10px 5px; border: 1px solid #ddd; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9em; display: flex; align-items: center; justify-content: center; height: 50px; }
         .bank-item.selected { background-color: var(--selection-bg-color); border-color: var(--selection-border-color); color: var(--blue-color); }
@@ -137,9 +92,14 @@
         #history-list { font-size: 0.9em; text-align: left; max-height: 150px; overflow-y: auto; }
         .history-item { padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
         .wrong-chars { color: var(--red-color); }
+        
+        /* 加载动画 */
+        #loading-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.9em; display: none; z-index: 999; }
     </style>
 </head>
 <body>
+    <div id="loading-toast"></div>
+
     <!-- 主页 -->
     <div id="home-screen" class="screen card">
         <h1>综合学习乐园</h1>
@@ -150,11 +110,13 @@
         </div>
         
         <details>
-            <summary>数据备份与恢复</summary>
+            <summary>数据管理与云端同步</summary>
             <div class="details-content">
+                <p style="font-size:0.85em; color:#666; margin-bottom:10px;">如果GitHub有更新，点击下方"强制重载"可同步。</p>
+                <button id="force-fetch-btn" class="btn btn-warning" style="margin-bottom: 10px;">🔄 强制重载云端数据(data.json)</button>
                 <div class="btn-group">
-                    <button id="export-data-btn" class="btn btn-secondary">导出数据</button>
-                    <button id="import-data-btn" class="btn btn-secondary">导入数据</button>
+                    <button id="export-data-btn" class="btn btn-secondary">备份导出</button>
+                    <button id="import-data-btn" class="btn btn-secondary">恢复导入</button>
                 </div>
                 <input type="file" id="import-file-input" style="display: none;" accept=".json">
             </div>
@@ -236,6 +198,7 @@
             screens: { home: $("#home-screen"), setup: $("#setup-screen"), main: $("#main-screen"), result: $("#result-screen") },
             switchScreen(n) { Object.values(this.screens).forEach(s => s.classList.add('hidden')); this.screens[n].classList.remove('hidden'); },
             formatTime: (s) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`,
+            toast(msg) { const t = $("#loading-toast"); t.textContent = msg; t.style.display='block'; setTimeout(()=>t.style.display='none', 2000); },
             updateSetup() {
                 const titles = { hanzi: '汉字', pinyin: '拼音', english: '英语' };
                 $("#setup-title").textContent = titles[state.currentSubject] + "设置";
@@ -263,13 +226,9 @@
             renderChar() {
                 $("#remaining-count").textContent = state.charsToPractice.length;
                 const box = $("#char-display"); box.innerHTML = '';
-                
-                // --- 修复点：恢复为 for...of 循环 ---
                 if (state.currentSubject === 'hanzi') {
-                    // 使用 for...of 来处理字符串（兼容单个字和词语）
                     for (const char of state.currentChar) {
-                        const cell = document.createElement('div'); 
-                        cell.className = 'char-cell-container';
+                        const cell = document.createElement('div'); cell.className = 'char-cell-container';
                         cell.innerHTML = `<div class="char-cell-grid"></div><div class="char-cell-text">${char}</div>`;
                         box.appendChild(cell);
                     }
@@ -301,7 +260,7 @@
                 if (!state.incorrectThisSession.includes(w)) state.incorrectThisSession.push(w);
                 const dbW = new Set(DB.getS(state.currentSubject, 'wrongChars', [])); dbW.add(w);
                 DB.setS(state.currentSubject, 'wrongChars', [...dbW]);
-                state.charsToPractice.push(state.charsToPractice.shift()); 
+                state.charsToPractice.push(state.charsToPractice.shift());
                 state.charsToPractice.splice(Math.ceil(state.charsToPractice.length/2), 0, w);
             }
             next();
@@ -360,10 +319,50 @@
             r.onload = (ev) => { if(confirm('覆盖?')) { localStorage.clear(); Object.entries(JSON.parse(ev.target.result)).forEach(([k,v])=>localStorage.setItem(k,v)); location.reload(); } };
             if(e.target.files[0]) r.readAsText(e.target.files[0]);
         };
-        window.onload = () => {
+
+        // --- 核心：自动加载 data.json ---
+        async function loadExternalData(force = false) {
+            try {
+                // 如果本地已有数据且不是强制加载，则跳过
+                if (!force && localStorage.getItem('hanzi_wordBanks')) {
+                    console.log('本地已有数据，跳过自动加载。');
+                    return;
+                }
+                
+                // 尝试请求同目录下的 data.json
+                const res = await fetch('data.json?t=' + new Date().getTime()); // 加时间戳防止缓存
+                if (res.ok) {
+                    const data = await res.json();
+                    if (force || !localStorage.getItem('hanzi_wordBanks')) {
+                        Object.entries(data).forEach(([k,v]) => localStorage.setItem(k, JSON.stringify(v)));
+                        UI.toast('已加载 data.json 数据');
+                        if(force) setTimeout(() => location.reload(), 1000);
+                    }
+                } else {
+                    console.log('未找到 data.json');
+                    if(force) alert('未找到 data.json 文件，请确保文件已上传至GitHub同目录');
+                }
+            } catch (e) {
+                console.error('加载外部数据失败', e);
+                if(force) alert('加载失败: ' + e.message);
+            }
+        }
+
+        bind('#force-fetch-btn', () => {
+            if(confirm('确定要从 data.json 重新加载数据吗？\n这将覆盖当前的本地记录！')) {
+                loadExternalData(true);
+            }
+        });
+
+        window.onload = async () => {
+            // 启动时尝试加载
+            await loadExternalData(false);
+
+            // 保底默认数据
             if(!localStorage.getItem('hanzi_wordBanks')) DB.setS('hanzi', 'wordBanks', {'入门':['天','地','人']});
             if(!localStorage.getItem('pinyin_wordBanks')) DB.setS('pinyin', 'wordBanks', {'单韵母':['a','o','e']});
             if(!localStorage.getItem('english_wordBanks')) DB.setS('english', 'wordBanks', {'Test':['Cat','Dog']});
+            
             UI.switchScreen('home');
         };
     </script>
