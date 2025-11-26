@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>综合学习乐园 (V9_Optimized)</title>
+    <title>综合学习乐园 (V12_Fixed)</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
         :root {
-            --bg-color: #f8f6f2; --card-bg-color: #ffffff; --char-color: #34495e;
-            --grid-color: #e5e7eb; --red-color: #c0392b; --blue-color: #3498db;
-            --yellow-color: #f39c12; --gray-color: #7f8c8d; --green-color: #27ae60;
-            --selection-bg-color: #d4eaf7; --selection-border-color: var(--blue-color);
+            --bg-color: #f0f2f5; --card-bg-color: #ffffff; --char-color: #2c3e50;
+            --grid-color: #e0e0e0; --red-color: #d93025; --blue-color: #1a73e8;
+            --yellow-color: #f9ab00; --gray-color: #5f6368; --green-color: #1e8e3e;
+            --selection-bg-color: #e8f0fe; --selection-border-color: var(--blue-color);
             --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             --font-char: 'KaiTi', '楷体', serif;
             --font-latin: Arial, sans-serif;
@@ -19,162 +19,139 @@
         body { 
             font-family: var(--font-main); 
             display: flex; justify-content: center; align-items: center; 
-            min-height: 100vh; margin: 0; padding: 10px; /* 减小页边距 */
+            min-height: 100vh; margin: 0; padding: 10px;
             background-color: var(--bg-color); 
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23dcdcdc' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
-        .screen { position: absolute; opacity: 1; visibility: visible; width: 100%; max-width: 600px; transition: opacity 0.3s ease, visibility 0.3s; }
-        .screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; position: fixed; }
+        
+        .screen { position: absolute; opacity: 1; visibility: visible; width: 100%; max-width: 600px; transition: opacity 0.2s; }
+        .screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         
         .card { 
             background-color: var(--card-bg-color); 
-            padding: 20px 15px; /* 调整内边距，给汉字留更多空间 */
-            border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); 
+            padding: 20px 15px; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
             width: 100%; 
             text-align: center; 
             display: flex; flex-direction: column; gap: 15px;
         }
 
-        h1 { margin: 5px 0 20px 0; font-size: 1.8em; color: var(--char-color); }
+        h1 { margin: 5px 0 15px 0; font-size: 1.5em; color: var(--char-color); }
         
+        /* 按钮样式：小巧精致 */
         .btn { 
-            width: 100%; padding: 15px; font-size: 1.05em; font-weight: bold; 
-            color: white; border: none; border-radius: 12px; cursor: pointer; 
-            transition: filter 0.2s, transform 0.1s; 
+            width: 100%; 
+            padding: 10px 0; 
+            font-size: 1em; 
+            font-weight: 600; 
+            color: white; border: none; border-radius: 8px; cursor: pointer; 
+            transition: opacity 0.2s; 
             -webkit-tap-highlight-color: transparent;
         }
-        .btn:active { transform: scale(0.98); }
+        .btn:active { opacity: 0.8; transform: scale(0.98); }
+        .btn-lg { font-size: 1.05em; padding: 12px 0; }
+
         .btn-primary { background-color: var(--blue-color); } 
-        .btn-warning { background-color: var(--yellow-color); } 
+        .btn-warning { background-color: var(--yellow-color); color: #fff; } 
         .btn-danger { background-color: var(--red-color); } 
         .btn-secondary { background-color: var(--gray-color); } 
         .btn-success { background-color: var(--green-color); }
-        .btn-group { display: flex; gap: 12px; }
+        
+        .btn-group { display: flex; gap: 15px; margin-top: 10px; }
         .btn-group .btn { margin: 0; flex: 1; }
 
-        input, textarea, select { width: 100%; padding: 12px; font-size: 1em; border-radius: 8px; border: 1px solid #ccc; background: #fff; }
+        input, textarea, select { width: 100%; padding: 10px; font-size: 1em; border-radius: 6px; border: 1px solid #ccc; }
         
-        details { border: 1px solid #eee; border-radius: 12px; margin-top: 10px; overflow: hidden; }
-        summary { font-weight: bold; cursor: pointer; padding: 15px; list-style: none; background: #fafafa; user-select: none; }
+        details { border: 1px solid #eee; border-radius: 8px; margin-top: 10px; overflow: hidden; }
+        summary { font-weight: bold; cursor: pointer; padding: 12px; list-style: none; background: #f8f9fa; }
         summary::-webkit-details-marker { display: none; }
-        summary::before { content: '▶ '; font-size: 0.8em; display: inline-block; width: 20px; }
-        details[open] summary::before { content: '▼ '; }
         .details-content { padding: 15px; border-top: 1px solid #eee; }
         
-        /* --- 核心展示区域优化 --- */
+        /* --- 核心展示区域 --- */
         #char-display-container { 
             position: relative; 
             width: 100%; 
-            margin: 10px 0 20px 0; 
-            min-height: 180px;
+            margin: 20px 0 30px 0; 
+            min-height: 160px;
             display: flex; 
             justify-content: center; 
             align-items: center; 
         }
 
         #stats { 
-            position: absolute; top: -30px; right: 0; 
-            font-size: 0.9em; color: #888; 
-            background: rgba(255,255,255,0.9); padding: 2px 8px; 
-            border-radius: 6px; 
+            position: absolute; top: -35px; right: 0; 
+            font-size: 0.85em; color: #999; 
         }
 
-        /* 汉字显示容器：Flex 布局，居中，紧凑间隙 */
         #char-display { 
             display: flex; 
             flex-direction: row; 
             justify-content: center; 
             align-items: center; 
-            flex-wrap: wrap; /* 允许换行，但通过宽度控制尽量一行 */
-            gap: 5px; /* 间隙很小，为了让字更大 */
+            flex-wrap: wrap; 
+            gap: 4px; 
             width: 100%;
-            animation: fadeIn 0.4s ease;
         }
 
-        /* 
-           单个汉字格子样式 
-           关键修改：使用百分比宽度，确保一行正好放下4个。
-           25% * 4 = 100%。减去 gap 的空间 (5px * 3 = 15px)。
-           保守计算：calc(25% - 5px)
-        */
+        /* 汉字容器：大尺寸 */
         .char-cell-container { 
             position: relative; 
             display: flex; justify-content: center; align-items: center; 
             flex-shrink: 0;
-            
-            /* 手机端尺寸：尽可能大 */
-            width: calc(25% - 5px); 
-            aspect-ratio: 1 / 1; /* 保持正方形 */
-            
-            /* 电脑端最大限制，防止字大得吓人 */
-            max-width: 110px; 
+            width: calc(25% - 4px); /* 4个一行 */
+            aspect-ratio: 1 / 1; 
+            max-width: 120px; 
         }
 
-        /* 田字格线条 */
-        .char-cell-grid { position: absolute; width: 100%; height: 100%; border: 2px solid var(--grid-color); box-sizing: border-box; }
-        .char-cell-grid::before, .char-cell-grid::after { content: ''; position: absolute; background-color: var(--grid-color); }
-        .char-cell-grid::before { width: 1px; height: 100%; top: 0; left: 50%; transform: translateX(-50%); }
-        .char-cell-grid::after { height: 1px; width: 100%; top: 50%; left: 0; transform: translateY(-50%); }
+        .char-cell-grid { position: absolute; width: 100%; height: 100%; border: 2px solid var(--grid-color); }
+        .char-cell-grid::before { content: ''; position: absolute; width: 1px; height: 100%; top: 0; left: 50%; background: var(--grid-color); transform: translateX(-50%); }
+        .char-cell-grid::after { content: ''; position: absolute; height: 1px; width: 100%; top: 50%; left: 0; background: var(--grid-color); transform: translateY(-50%); }
 
-        /* 汉字文本 */
         .char-cell-text { 
             position: relative; 
             font-family: var(--font-char); 
             line-height: 1;
             z-index: 2;
             color: var(--char-color);
-
-            /* 字体大小：基于视口宽度的响应式大小，确保在格子内最大化 */
-            /* 25vw是格子的宽度，字体稍微小一点点留边距，约 16-18vw */
-            font-size: 16vw; 
+            font-size: 19vw; /* 极大字体 */
         }
         
-        /* 电脑端字体固定大小 */
         @media (min-width: 500px) {
-            .char-cell-text { font-size: 80px; }
-            .char-cell-container { height: 110px; } /* 兼容不支持 aspect-ratio 的旧设备 */
+            .char-cell-text { font-size: 90px; }
+            .char-cell-container { height: 120px; } 
         }
 
-        /* 拼音/英语文本 */
         .char-item-latin { 
             font-family: var(--font-latin); 
-            font-weight: bold; 
-            text-align: center; 
-            line-height: 1.2; 
-            color: var(--char-color);
-            font-size: clamp(2.5rem, 10vw, 4.5rem); /* 放大英语/拼音 */
-            word-break: break-word;
+            font-weight: bold; text-align: center; color: var(--char-color);
+            font-size: clamp(3rem, 12vw, 5rem); 
             width: 100%;
         }
         .char-item-latin.is-pinyin { font-weight: normal; }
 
-        /* 列表样式 */
-        #bank-selection-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 20px; }
-        .bank-item { padding: 15px 5px; border: 2px solid #eee; border-radius: 10px; font-weight: bold; cursor: pointer; user-select: none; font-size: 0.95em; display: flex; align-items: center; justify-content: center; min-height: 60px; }
+        /* 列表 */
+        #bank-selection-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+        .bank-item { padding: 10px 5px; border: 1px solid #ddd; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9em; display: flex; align-items: center; justify-content: center; height: 50px; }
         .bank-item.selected { background-color: var(--selection-bg-color); border-color: var(--selection-border-color); color: var(--blue-color); }
 
-        #history-list { font-size: 0.9em; text-align: left; max-height: 200px; overflow-y: auto; }
-        .history-item { padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
-        .wrong-chars { color: var(--red-color); font-weight: bold; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        #history-list { font-size: 0.9em; text-align: left; max-height: 150px; overflow-y: auto; }
+        .history-item { padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
+        .wrong-chars { color: var(--red-color); }
     </style>
 </head>
 <body>
     <!-- 主页 -->
     <div id="home-screen" class="screen card">
         <h1>综合学习乐园</h1>
-        <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+        <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
             <button id="select-hanzi" class="btn btn-lg btn-primary">学习汉字</button>
             <button id="select-pinyin" class="btn btn-lg btn-success">学习拼音</button>
             <button id="select-english" class="btn btn-lg btn-danger">学习英语</button>
         </div>
         
         <details>
-            <summary>数据管理</summary>
+            <summary>数据备份与恢复</summary>
             <div class="details-content">
-                <p style="text-align:left; font-size: 0.9em; color: #666; margin: 0 0 10px 0;">备份数据或从文件恢复。</p>
                 <div class="btn-group">
                     <button id="export-data-btn" class="btn btn-secondary">导出数据</button>
                     <button id="import-data-btn" class="btn btn-secondary">导入数据</button>
@@ -184,9 +161,9 @@
         </details>
     </div>
 
-    <!-- 设置/选择页面 -->
+    <!-- 设置页 -->
     <div id="setup-screen" class="screen card hidden">
-        <h1 id="setup-title">学习设置</h1>
+        <h1 id="setup-title">设置</h1>
         <div id="bank-selection-list"></div>
         <div class="btn-group">
             <button id="start-btn" class="btn btn-primary btn-lg">开始</button>
@@ -196,328 +173,199 @@
         <details>
             <summary>内容管理</summary>
             <div class="details-content">
-                <select id="bank-edit-select" style="margin-bottom:10px"></select>
-                <input type="text" id="edit-bank-name" placeholder="词库名称 (如: 第一课)">
-                <textarea id="edit-bank-chars" rows="5" placeholder="在此输入内容，每个词条占一行"></textarea>
-                <div class="btn-group" style="margin-top:10px">
+                <select id="bank-edit-select" style="margin-bottom:8px"></select>
+                <input type="text" id="edit-bank-name" placeholder="词库名称" style="margin-bottom:8px">
+                <textarea id="edit-bank-chars" rows="4" placeholder="内容，每行一个"></textarea>
+                <div class="btn-group">
                     <button id="save-bank-btn" class="btn btn-success">保存</button>
                     <button id="delete-bank-btn" class="btn btn-danger">删除</button>
                 </div>
-                <hr style="margin: 15px 0; border: 0; border-top: 1px dashed #ddd;">
-                <textarea id="edit-wrong-chars" rows="3" placeholder="手动编辑错题本"></textarea>
-                <button id="save-wrong-chars-btn" class="btn btn-secondary">更新错题本</button>
+                <div style="margin-top:15px; border-top:1px dashed #eee; padding-top:10px">
+                    <textarea id="edit-wrong-chars" rows="2" placeholder="手动编辑错题"></textarea>
+                    <button id="save-wrong-chars-btn" class="btn btn-secondary" style="margin-top:8px">更新错题本</button>
+                </div>
             </div>
         </details>
         
         <details>
-            <summary>练习历史</summary>
+            <summary>历史记录</summary>
             <div id="history-list" class="details-content"></div>
         </details>
         
-        <button id="back-to-home-btn" class="btn btn-secondary" style="margin-top: 10px;">返回主页</button>
+        <button id="back-to-home-btn" class="btn btn-secondary" style="margin-top: 10px;">返回</button>
     </div>
 
-    <!-- 练习主界面 -->
+    <!-- 练习页 -->
     <div id="main-screen" class="screen card hidden">
         <div id="char-display-container">
             <div id="stats"><span id="timer">00:00</span> | 剩余: <span id="remaining-count">0</span></div>
-            <div id="char-display">
-                <!-- 动态生成内容 -->
-            </div>
+            <div id="char-display"></div>
         </div>
-        <div class="btn-group" style="margin-top: auto;">
+        
+        <div class="btn-group">
             <button id="correct-btn" class="btn btn-success btn-lg">😊 认识</button>
             <button id="incorrect-btn" class="btn btn-danger btn-lg">😥 不认识</button>
         </div>
-        <button id="exit-session-btn" style="background:none; border:none; color:#999; margin-top:15px; font-size:0.9em; text-decoration: underline; cursor: pointer;">结束本次练习</button>
+        <div style="margin-top: 15px;">
+            <span id="exit-session-btn" style="color:#999; font-size:0.85em; text-decoration: underline; cursor: pointer;">结束本次练习</span>
+        </div>
     </div>
 
-    <!-- 结果界面 -->
+    <!-- 结果页 -->
     <div id="result-screen" class="screen card hidden">
         <h1 id="result-title"></h1>
-        <div style="font-size: 1.1em; margin: 10px 0;">
-            <p>总用时：<strong id="final-time"></strong></p>
-            <p>本次错题：<br><strong id="incorrect-list" style="color: var(--red-color); display:block; margin-top:5px;"></strong></p>
+        <div style="margin: 10px 0;">
+            <p>用时：<strong id="final-time"></strong></p>
+            <p>错题：<strong id="incorrect-list" style="color: var(--red-color);"></strong></p>
         </div>
         <button id="home-btn" class="btn btn-secondary">返回主页</button>
     </div>
 
     <script>
-        const $ = (selector) => document.querySelector(selector);
+        const $ = (s) => document.querySelector(s);
+        let state = { currentSubject: null, charsToPractice: [], currentChar: '', incorrectThisSession: [], seconds: 0, timerInterval: null, currentSessionSource: '' };
         
-        let state = {
-            currentSubject: null, 
-            charsToPractice: [],
-            currentChar: '',
-            incorrectThisSession: [],
-            seconds: 0,
-            timerInterval: null,
-            currentSessionSource: ''
-        };
-
         const DB = {
-            get: (key, def) => { try { return JSON.parse(localStorage.getItem(key)) || def; } catch { return def; } },
-            set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
-            getForSubject: (subj, key, def) => DB.get(`${subj}_${key}`, def),
-            setForSubject: (subj, key, val) => DB.set(`${subj}_${key}`, val)
+            get: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch { return d; } },
+            set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+            getS: (s, k, d) => DB.get(`${s}_${k}`, d),
+            setS: (s, k, v) => DB.set(`${s}_${k}`, v)
         };
 
         const UI = {
             screens: { home: $("#home-screen"), setup: $("#setup-screen"), main: $("#main-screen"), result: $("#result-screen") },
-            el: {
-                setupTitle: $("#setup-title"), bankList: $("#bank-selection-list"), bankSelect: $("#bank-edit-select"),
-                editName: $("#edit-bank-name"), editContent: $("#edit-bank-chars"), editWrong: $("#edit-wrong-chars"),
-                display: $("#char-display"), timer: $("#timer"), remaining: $("#remaining-count"),
-                history: $("#history-list"), resultTitle: $("#result-title"), finalTime: $("#final-time"), incorrectList: $("#incorrect-list"),
-                practiceWrongBtn: $("#practice-wrong-btn")
-            },
-
-            switchScreen(name) {
-                Object.values(this.screens).forEach(s => s.classList.add('hidden'));
-                this.screens[name].classList.remove('hidden');
-            },
-
+            switchScreen(n) { Object.values(this.screens).forEach(s => s.classList.add('hidden')); this.screens[n].classList.remove('hidden'); },
             formatTime: (s) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`,
-
             updateSetup() {
-                const titles = { hanzi: '汉字学习', pinyin: '拼音学习', english: '英语学习' };
-                this.el.setupTitle.textContent = titles[state.currentSubject];
-                
-                const banks = DB.getForSubject(state.currentSubject, 'wordBanks', {});
-                this.el.bankList.innerHTML = '';
-                const names = Object.keys(banks);
-                
-                if (names.length === 0) {
-                    this.el.bankList.innerHTML = '<p style="grid-column:1/-1; color:#999;">暂无词库，请在下方添加</p>';
-                } else {
-                    names.forEach(name => {
-                        const div = document.createElement('div');
-                        div.className = 'bank-item';
-                        div.textContent = name;
-                        div.onclick = () => div.classList.toggle('selected');
-                        div.dataset.name = name;
-                        this.el.bankList.appendChild(div);
-                    });
-                }
-
-                this.el.bankSelect.innerHTML = '<option value="">-- 新建/选择词库 --</option>';
-                names.forEach(n => this.el.bankSelect.add(new Option(n, n)));
-                this.populateEditor('');
-
-                const wrongs = DB.getForSubject(state.currentSubject, 'wrongChars', []);
-                this.el.editWrong.value = wrongs.join('\n');
-                this.el.practiceWrongBtn.textContent = `练习错题 (${wrongs.length})`;
-                
-                const history = DB.getForSubject(state.currentSubject, 'practiceHistory', []);
-                this.el.history.innerHTML = history.length ? '' : '<p style="color:#999">暂无记录</p>';
-                history.slice(0, 5).forEach(h => {
-                    this.el.history.innerHTML += `<div class="history-item">
-                        <div style="font-weight:bold; font-size:0.85em; color:#666;">${h.date} - ${h.source} (${h.time})</div>
-                        ${h.wrong.length ? `<div class="wrong-chars">错: ${h.wrong.join(', ')}</div>` : '<div style="color:#27ae60">全对</div>'}
-                    </div>`;
+                const titles = { hanzi: '汉字', pinyin: '拼音', english: '英语' };
+                $("#setup-title").textContent = titles[state.currentSubject] + "设置";
+                const banks = DB.getS(state.currentSubject, 'wordBanks', {});
+                const list = $("#bank-selection-list"); list.innerHTML = '';
+                Object.keys(banks).forEach(name => {
+                    const d = document.createElement('div'); d.className = 'bank-item'; d.textContent = name;
+                    d.onclick = () => d.classList.toggle('selected'); d.dataset.name = name; list.appendChild(d);
                 });
+                const sel = $("#bank-edit-select"); sel.innerHTML = '<option value="">-- 新建/选择 --</option>';
+                Object.keys(banks).forEach(n => sel.add(new Option(n, n)));
+                UI.loadEditor('');
+                const wrongs = DB.getS(state.currentSubject, 'wrongChars', []);
+                $("#edit-wrong-chars").value = wrongs.join('\n');
+                $("#practice-wrong-btn").textContent = `错题 (${wrongs.length})`;
+                const h = DB.getS(state.currentSubject, 'practiceHistory', []);
+                $("#history-list").innerHTML = h.length ? '' : '无记录';
+                h.slice(0, 5).forEach(i => $("#history-list").innerHTML += `<div class="history-item">${i.date} - ${i.wrong.length?'错'+i.wrong.length:'全对'}</div>`);
             },
-
-            populateEditor(name) {
-                const banks = DB.getForSubject(state.currentSubject, 'wordBanks', {});
-                if (name && banks[name]) {
-                    this.el.editName.value = name;
-                    this.el.editContent.value = banks[name].join('\n');
-                } else {
-                    this.el.editName.value = '';
-                    this.el.editContent.value = '';
-                }
+            loadEditor(n) {
+                const banks = DB.getS(state.currentSubject, 'wordBanks', {});
+                $("#edit-bank-name").value = n || '';
+                $("#edit-bank-chars").value = (banks[n] || []).join('\n');
             },
-
             renderChar() {
-                this.el.remaining.textContent = state.charsToPractice.length;
-                this.el.display.innerHTML = '';
+                $("#remaining-count").textContent = state.charsToPractice.length;
+                const box = $("#char-display"); box.innerHTML = '';
                 
+                // --- 修复点：恢复为 for...of 循环 ---
                 if (state.currentSubject === 'hanzi') {
+                    // 使用 for...of 来处理字符串（兼容单个字和词语）
                     for (const char of state.currentChar) {
-                        const cell = document.createElement('div');
+                        const cell = document.createElement('div'); 
                         cell.className = 'char-cell-container';
                         cell.innerHTML = `<div class="char-cell-grid"></div><div class="char-cell-text">${char}</div>`;
-                        this.el.display.appendChild(cell);
+                        box.appendChild(cell);
                     }
                 } else {
-                    const item = document.createElement('div');
-                    item.className = 'char-item-latin';
-                    if (state.currentSubject === 'pinyin') item.classList.add('is-pinyin');
-                    item.textContent = state.currentChar;
-                    this.el.display.appendChild(item);
+                    const item = document.createElement('div'); item.className = 'char-item-latin';
+                    if(state.currentSubject === 'pinyin') item.classList.add('is-pinyin');
+                    item.textContent = state.currentChar; box.appendChild(item);
                 }
             }
         };
 
-        function init() {
-            if (!localStorage.getItem('hanzi_wordBanks')) DB.setForSubject('hanzi', 'wordBanks', { '入门字': ['人','口','手','足','上','下','大','小'] });
-            if (!localStorage.getItem('pinyin_wordBanks')) DB.setForSubject('pinyin', 'wordBanks', { '单韵母': ['a','o','e','i','u','ü'] });
-            if (!localStorage.getItem('english_wordBanks')) DB.setForSubject('english', 'wordBanks', { 'Colors': ['Red','Blue','Green'] });
-            UI.switchScreen('home');
-        }
-
-        function startSession(chars, source) {
-            if (!chars || chars.length === 0) return alert('没有内容可供练习');
-            state.charsToPractice = shuffle([...chars]);
-            state.incorrectThisSession = [];
-            state.currentSessionSource = source;
-            state.seconds = 0;
+        function start(chars, src) {
+            if (!chars || !chars.length) return alert('无内容');
+            state.charsToPractice = chars.sort(()=>Math.random()-0.5);
+            state.incorrectThisSession = []; state.currentSessionSource = src; state.seconds = 0;
             UI.switchScreen('main');
             clearInterval(state.timerInterval);
-            state.timerInterval = setInterval(() => {
-                state.seconds++;
-                UI.el.timer.textContent = UI.formatTime(state.seconds);
-            }, 1000);
-            nextChar();
+            state.timerInterval = setInterval(() => { state.seconds++; $("#timer").textContent = UI.formatTime(state.seconds); }, 1000);
+            next();
         }
-
-        function nextChar() {
-            if (state.charsToPractice.length === 0) return finishSession();
-            state.currentChar = state.charsToPractice[0];
-            UI.renderChar();
+        function next() {
+            if (!state.charsToPractice.length) return end();
+            state.currentChar = state.charsToPractice[0]; UI.renderChar();
         }
-
-        function handleAnswer(correct) {
-            if (correct) {
-                state.charsToPractice.shift();
-            } else {
-                const val = state.currentChar;
-                if (!state.incorrectThisSession.includes(val)) state.incorrectThisSession.push(val);
-                const permanentWrongs = new Set(DB.getForSubject(state.currentSubject, 'wrongChars', []));
-                permanentWrongs.add(val);
-                DB.setForSubject(state.currentSubject, 'wrongChars', [...permanentWrongs]);
-                const item = state.charsToPractice.shift();
-                const idx = Math.ceil(state.charsToPractice.length / 2);
-                state.charsToPractice.splice(idx, 0, item);
+        function answer(ok) {
+            if (ok) state.charsToPractice.shift();
+            else {
+                const w = state.currentChar;
+                if (!state.incorrectThisSession.includes(w)) state.incorrectThisSession.push(w);
+                const dbW = new Set(DB.getS(state.currentSubject, 'wrongChars', [])); dbW.add(w);
+                DB.setS(state.currentSubject, 'wrongChars', [...dbW]);
+                state.charsToPractice.push(state.charsToPractice.shift()); 
+                state.charsToPractice.splice(Math.ceil(state.charsToPractice.length/2), 0, w);
             }
-            nextChar();
+            next();
         }
-
-        function finishSession() {
+        function end() {
             clearInterval(state.timerInterval);
-            const history = DB.getForSubject(state.currentSubject, 'practiceHistory', []);
-            history.unshift({
-                date: new Date().toLocaleDateString(),
-                time: UI.formatTime(state.seconds),
-                source: state.currentSessionSource,
-                wrong: [...state.incorrectThisSession]
-            });
-            if (history.length > 20) history.pop();
-            DB.setForSubject(state.currentSubject, 'practiceHistory', history);
-
-            UI.el.finalTime.textContent = UI.formatTime(state.seconds);
-            UI.el.incorrectList.textContent = state.incorrectThisSession.length ? state.incorrectThisSession.join('，') : '无';
-            
-            if (state.incorrectThisSession.length === 0) {
-                UI.el.resultTitle.textContent = "太棒了，全对！🎉";
-                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-            } else {
-                UI.el.resultTitle.textContent = "完成练习，继续加油！💪";
-            }
+            const h = DB.getS(state.currentSubject, 'practiceHistory', []);
+            h.unshift({ date: new Date().toLocaleDateString(), time: UI.formatTime(state.seconds), wrong: [...state.incorrectThisSession] });
+            DB.setS(state.currentSubject, 'practiceHistory', h.slice(0,20));
+            $("#final-time").textContent = UI.formatTime(state.seconds);
+            $("#incorrect-list").textContent = state.incorrectThisSession.join('，') || '无';
+            $("#result-title").textContent = state.incorrectThisSession.length ? "加油！" : "全对！🎉";
+            if (!state.incorrectThisSession.length) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
             UI.switchScreen('result');
         }
 
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-
-        $('#select-hanzi').onclick = () => { state.currentSubject = 'hanzi'; UI.updateSetup(); UI.switchScreen('setup'); };
-        $('#select-pinyin').onclick = () => { state.currentSubject = 'pinyin'; UI.updateSetup(); UI.switchScreen('setup'); };
-        $('#select-english').onclick = () => { state.currentSubject = 'english'; UI.updateSetup(); UI.switchScreen('setup'); };
-        
-        $('#back-to-home-btn').onclick = () => UI.switchScreen('home');
-        $('#home-btn').onclick = () => UI.switchScreen('home');
-        $('#exit-session-btn').onclick = finishSession;
-
-        $('#bank-edit-select').onchange = (e) => UI.populateEditor(e.target.value);
-        
-        $('#save-bank-btn').onclick = () => {
-            const name = $('#edit-bank-name').value.trim();
-            const content = $('#edit-bank-chars').value.trim().split(/\n+/).filter(Boolean);
-            if (!name || !content.length) return alert('请填写名称和内容');
-            const banks = DB.getForSubject(state.currentSubject, 'wordBanks', {});
-            banks[name] = content;
-            DB.setForSubject(state.currentSubject, 'wordBanks', banks);
-            UI.updateSetup();
-            alert('保存成功');
-        };
-
-        $('#delete-bank-btn').onclick = () => {
-            const name = $('#edit-bank-name').value;
-            if (!name) return;
-            if (confirm(`确定删除词库 "${name}" 吗？`)) {
-                const banks = DB.getForSubject(state.currentSubject, 'wordBanks', {});
-                delete banks[name];
-                DB.setForSubject(state.currentSubject, 'wordBanks', banks);
-                UI.updateSetup();
-            }
-        };
-
-        $('#save-wrong-chars-btn').onclick = () => {
-            const content = $('#edit-wrong-chars').value.trim().split(/\n+/).filter(Boolean);
-            DB.setForSubject(state.currentSubject, 'wrongChars', [...new Set(content)]);
-            UI.updateSetup();
-            alert('错题本已更新');
-        };
-
-        $('#start-btn').onclick = () => {
-            const selected = Array.from(document.querySelectorAll('.bank-item.selected')).map(el => el.dataset.name);
-            if (!selected.length) return alert('请选择至少一个词库');
-            const banks = DB.getForSubject(state.currentSubject, 'wordBanks', {});
-            const allChars = selected.flatMap(name => banks[name] || []);
-            startSession(allChars, selected.join(', '));
-        };
-
-        $('#practice-wrong-btn').onclick = () => {
-            const wrongs = DB.getForSubject(state.currentSubject, 'wrongChars', []);
-            if (!wrongs.length) return alert('错题本是空的！');
-            startSession(wrongs, '错题本');
-        };
-
-        $('#correct-btn').onclick = () => handleAnswer(true);
-        $('#incorrect-btn').onclick = () => handleAnswer(false);
-
-        $('#export-data-btn').onclick = () => {
-            const data = {};
-            ['hanzi','pinyin','english'].forEach(sub => {
-                ['wordBanks','wrongChars','practiceHistory'].forEach(key => {
-                    data[`${sub}_${key}`] = DB.getForSubject(sub, key, null);
-                });
-            });
-            const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `学习备份_${new Date().toISOString().slice(0,10)}.json`;
-            a.click();
-        };
-
-        $('#import-data-btn').onclick = () => $('#import-file-input').click();
+        const bind = (id, fn) => $(id).onclick = fn;
+        bind('#select-hanzi', () => { state.currentSubject = 'hanzi'; UI.updateSetup(); UI.switchScreen('setup'); });
+        bind('#select-pinyin', () => { state.currentSubject = 'pinyin'; UI.updateSetup(); UI.switchScreen('setup'); });
+        bind('#select-english', () => { state.currentSubject = 'english'; UI.updateSetup(); UI.switchScreen('setup'); });
+        bind('#back-to-home-btn', () => UI.switchScreen('home'));
+        bind('#home-btn', () => UI.switchScreen('home'));
+        bind('#exit-session-btn', end);
+        bind('#correct-btn', () => answer(true));
+        bind('#incorrect-btn', () => answer(false));
+        bind('#start-btn', () => {
+            const els = document.querySelectorAll('.bank-item.selected');
+            if (!els.length) return alert('请选择词库');
+            const banks = DB.getS(state.currentSubject, 'wordBanks', {});
+            start(Array.from(els).flatMap(e => banks[e.dataset.name] || []), '练习');
+        });
+        bind('#practice-wrong-btn', () => {
+            const w = DB.getS(state.currentSubject, 'wrongChars', []);
+            w.length ? start(w, '错题本') : alert('无错题');
+        });
+        $('#bank-edit-select').onchange = (e) => UI.loadEditor(e.target.value);
+        bind('#save-bank-btn', () => {
+            const n = $('#edit-bank-name').value.trim(), c = $('#edit-bank-chars').value.trim().split(/\n+/).filter(Boolean);
+            if(n && c.length) { const b = DB.getS(state.currentSubject, 'wordBanks', {}); b[n] = c; DB.setS(state.currentSubject, 'wordBanks', b); UI.updateSetup(); alert('已保存'); }
+        });
+        bind('#delete-bank-btn', () => {
+            const n = $('#edit-bank-name').value;
+            if(n && confirm('删除?')) { const b = DB.getS(state.currentSubject, 'wordBanks', {}); delete b[n]; DB.setS(state.currentSubject, 'wordBanks', b); UI.updateSetup(); }
+        });
+        bind('#save-wrong-chars-btn', () => {
+            const c = $('#edit-wrong-chars').value.trim().split(/\n+/).filter(Boolean);
+            DB.setS(state.currentSubject, 'wrongChars', [...new Set(c)]); UI.updateSetup(); alert('已更新');
+        });
+        bind('#export-data-btn', () => {
+            const d = {}; for(let i=0; i<localStorage.length; i++) d[localStorage.key(i)] = localStorage.getItem(localStorage.key(i));
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(d)], {type:"application/json"})); a.download = `Backup.json`; a.click();
+        });
+        bind('#import-data-btn', () => $('#import-file-input').click());
         $('#import-file-input').onchange = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                try {
-                    const data = JSON.parse(evt.target.result);
-                    if (confirm('导入将覆盖当前所有数据，确定吗？')) {
-                        Object.keys(data).forEach(k => {
-                            if(data[k]) localStorage.setItem(k, JSON.stringify(data[k]));
-                        });
-                        alert('导入成功');
-                        location.reload();
-                    }
-                } catch(err) { alert('文件格式错误'); }
-            };
-            reader.readAsText(file);
+            const r = new FileReader();
+            r.onload = (ev) => { if(confirm('覆盖?')) { localStorage.clear(); Object.entries(JSON.parse(ev.target.result)).forEach(([k,v])=>localStorage.setItem(k,v)); location.reload(); } };
+            if(e.target.files[0]) r.readAsText(e.target.files[0]);
         };
-
-        window.onload = init;
+        window.onload = () => {
+            if(!localStorage.getItem('hanzi_wordBanks')) DB.setS('hanzi', 'wordBanks', {'入门':['天','地','人']});
+            if(!localStorage.getItem('pinyin_wordBanks')) DB.setS('pinyin', 'wordBanks', {'单韵母':['a','o','e']});
+            if(!localStorage.getItem('english_wordBanks')) DB.setS('english', 'wordBanks', {'Test':['Cat','Dog']});
+            UI.switchScreen('home');
+        };
     </script>
 </body>
 </html>
