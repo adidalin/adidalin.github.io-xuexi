@@ -3,18 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>综合学习乐园 (V21_PerfectUniform)</title>
+    <title>综合学习乐园 (V32_RotationFix)</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
+        /* 默认（手机端）：使用系统黑体/无衬线字体，清晰度高 */
         :root {
             --bg-color: #f0f2f5; --card-bg-color: #ffffff; --char-color: #2c3e50;
             --grid-color: #e0e0e0; --red-color: #d93025; --blue-color: #1a73e8;
             --yellow-color: #f9ab00; --gray-color: #5f6368; --green-color: #1e8e3e;
             --selection-bg-color: #e8f0fe; --selection-border-color: var(--blue-color);
+            
             --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            --font-char: 'KaiTi', '楷体', serif;
+            
+            /* 手机端默认：使用标准黑体，防止笔画过细 */
+            --font-char: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            
             --font-latin: Arial, sans-serif;
         }
+
+        /* PC端特别设置：屏幕大，使用楷体更有书法感 */
+        @media (min-width: 769px) {
+            :root {
+                --font-char: "KaiTi", "STKaiti", "楷体", "SimSun", "Songti SC", serif;
+            }
+        }
+        
         *, *::before, *::after { box-sizing: border-box; }
         body { 
             font-family: var(--font-main); 
@@ -24,7 +37,7 @@
             overflow: hidden; 
         }
         
-        /* === 页面切换逻辑 === */
+        /* === 页面状态管理 === */
         .screen { 
             position: absolute; width: 100%; max-width: 600px; 
             display: flex; flex-direction: column; 
@@ -33,7 +46,7 @@
         }
         .screen.active { 
             opacity: 1; visibility: visible; pointer-events: auto; 
-            z-index: 100; /* 页面层级 */
+            z-index: 100;
         }
         
         .card { 
@@ -46,7 +59,6 @@
 
         h1 { margin: 5px 0 15px 0; font-size: 1.5em; color: var(--char-color); }
         
-        /* 按钮系统 */
         .btn { 
             width: 100%; padding: 12px 0; font-size: 1em; font-weight: 600; 
             color: white; border: none; border-radius: 8px; cursor: pointer; 
@@ -74,97 +86,96 @@
         #history-list { font-size: 0.9em; text-align: left; max-height: 150px; overflow-y: auto; }
         .history-item { padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
 
-        /* === 汉字方格基础样式 === */
+        /* 基础字格样式 */
         .char-cell-container { 
             position: relative; display: flex; justify-content: center; align-items: center; flex-shrink: 0;
             aspect-ratio: 1 / 1; border: 1px solid #eee; background: #fff;
+            overflow: hidden; 
         }
         .char-cell-grid { position: absolute; width: 100%; height: 100%; border: 2px solid var(--grid-color); }
         .char-cell-grid::before { content: ''; position: absolute; width: 1px; height: 100%; top: 0; left: 50%; background: var(--grid-color); transform: translateX(-50%); }
         .char-cell-grid::after { content: ''; position: absolute; height: 1px; width: 100%; top: 50%; left: 0; background: var(--grid-color); transform: translateY(-50%); }
-        .char-cell-text { position: relative; font-family: var(--font-char); line-height: 1; z-index: 2; color: var(--char-color); }
         
-        .char-item-latin { 
-            font-family: var(--font-latin); font-weight: bold; text-align: center; color: var(--char-color);
-            line-height: 1.2;
-        }
+        .char-cell-text { position: relative; font-family: var(--font-char); line-height: 1; z-index: 2; color: var(--char-color); font-weight: 500; }
+        .char-item-latin { font-family: var(--font-latin); font-weight: bold; text-align: center; color: var(--char-color); line-height: 1.2; }
         .char-item-latin.is-pinyin { font-weight: normal; }
 
         #loading-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.9em; display: none; z-index: 9999; }
 
-        /* =========================================================
-           布局系统：手机强制横屏 & 统一字号
-           ========================================================= */
+        /* === 手机端 练习模式 核心布局 === */
 
         body.practice-mode { background-color: #fff; }
 
-        /* 手机竖屏时 -> 强制旋转成横屏 */
+        /* 强制旋转 */
         @media (max-width: 768px) and (orientation: portrait) {
             body.practice-mode .screen.active {
                 position: fixed; top: 50%; left: 50%;
-                width: 100vh; height: 100vw;
+                width: 100vh; /* 宽是屏幕的长边 */
+                height: 100vw; /* 高是屏幕的短边 */
                 transform: translate(-50%, -50%) rotate(90deg);
                 background: #fff; display: block; 
-                z-index: 200; /* 练习页层级 */
+                z-index: 200; 
                 padding: 0; margin: 0; box-shadow: none; border-radius: 0;
             }
         }
 
         .screen.practice-layout { position: relative; width: 100%; height: 100%; overflow: hidden; }
 
-        /* 顶部栏 */
         .practice-header {
             position: absolute; top: 0; left: 0; width: 100%; height: 40px;
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0 20px; background: rgba(255,255,255,0.9); z-index: 10;
+            padding: 0 20px; background: rgba(255,255,255,0.95); z-index: 10;
             color: #666; border-bottom: 1px solid #f0f0f0;
         }
 
-        /* 底部栏 */
         .practice-footer {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 80px; 
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background: rgba(255,255,255,0.9); z-index: 10; padding: 0 20px; border-top: 1px solid #f0f0f0;
+            background: rgba(255,255,255,0.95); z-index: 10; padding: 0 20px; border-top: 1px solid #f0f0f0;
         }
 
-        /* 中间内容区 */
         .practice-body {
             position: absolute; top: 40px; bottom: 80px; left: 0; width: 100%;
             display: flex; justify-content: center; align-items: center; z-index: 1;
             overflow: hidden;
         }
 
-        /* 汉字容器 */
         #char-display {
             display: flex; justify-content: center; align-items: center; 
-            gap: 10px; width: 100%; max-height: 100%;
-            /* 关键：允许换行，这样4个字就会变成 2x2 排列，而不需要缩小字体 */
-            flex-wrap: wrap; 
+            gap: 4px; /* 间距小一点，给字腾地方 */
+            width: 100%; max-height: 100%;
+            flex-wrap: nowrap; /* 强制一行 */
         }
 
-        /* --- 核心：手机端统一大字号 --- */
+        /* 
+           === 手机端尺寸 修正 (V30_MobileFix) === 
+        */
         @media (max-width: 768px) {
-            /* 
-               使用 28vmin。
-               在横屏手机上，高度是较短边。body高度约等于100vmin。
-               去掉头尾(约20vmin)，剩下80vmin。
-               2行字 (28*2 = 56vmin) + 间隙，完全放得下。
-               1行字 (28vmin) 也很大很清晰。
-               字号统一，不再变化。
-            */
             .practice-body .char-cell-container {
-                width: 28vmin; height: 28vmin; 
-                /* 最大限制防止在iPad等大屏上过大 */
-                max-width: 160px; max-height: 160px;
+                /* 
+                   从 22vh 调整为 19vh。
+                */
+                width: 19vh; 
+                height: 19vh;
+                
+                /* 辅助限制：防止屏幕特异时溢出 */
+                max-height: 55vw; 
+                max-width: 55vw;
             }
-            .practice-body .char-cell-text { font-size: 20vmin; }
-            .practice-body .char-item-latin { font-size: 12vmin; } /* 英文/拼音 */
+            
+            /* 
+               字号：从 18vh 调整为 15vh。
+            */
+            .practice-body .char-cell-text { font-size: 15vh; }
+            
+            /* 拼音/英语也相应微调 */
+            .practice-body .char-item-latin { font-size: 10vh; }
 
             .practice-footer .btn-group { gap: 20px; }
             .practice-footer .btn-lg { padding: 10px 0; font-size: 1.1em; }
         }
 
-        /* --- PC端：保持超大字号 --- */
+        /* PC端 (保持不变) */
         @media (min-width: 769px) {
             .screen.practice-layout.active {
                 max-width: 1000px; height: 80vh;
@@ -173,11 +184,9 @@
                 left: 50%; top: 50%; transform: translate(-50%, -50%);
                 position: fixed; 
             }
-            
             .practice-body .char-cell-container { width: 220px; height: 220px; }
-            .practice-body .char-cell-text { font-size: 180px; }
+            .practice-body .char-cell-text { font-size: 160px; }
             .practice-body .char-item-latin { font-size: 8rem; }
-            
             .practice-header { font-size: 1.5em; height: 60px; }
             .practice-footer { height: 100px; }
             .practice-footer .btn-lg { font-size: 1.5em; padding: 20px 0; }
@@ -260,12 +269,13 @@
             <span>剩余: <span id="remaining-count">0</span></span>
         </div>
         
-        <div class="practice-body">
+        <div class="practice-body" id="practice-body-container">
             <div id="char-display"></div>
         </div>
         
         <div class="practice-footer">
             <div class="btn-group">
+                <!-- 认识在先(左/上)，不认识在后(右/下) -->
                 <button id="correct-btn" class="btn btn-success btn-lg">😊 认识</button>
                 <button id="incorrect-btn" class="btn btn-danger btn-lg">😥 不认识</button>
             </div>
@@ -287,6 +297,7 @@
         </div>
     </div>
 
+    <!-- 脚本 -->
     <script>
         const $ = (s) => document.querySelector(s);
         let state = { currentSubject: null, charsToPractice: [], currentChar: '', incorrectThisSession: [], seconds: 0, timerInterval: null, currentSessionSource: '' };
@@ -299,10 +310,19 @@
         };
 
         const UI = {
-            screens: { home: $("#home-screen"), setup: $("#setup-screen"), main: $("#main-screen"), result: $("#result-screen") },
+            getScreens: () => ({ 
+                home: $("#home-screen"), 
+                setup: $("#setup-screen"), 
+                main: $("#main-screen"), 
+                result: $("#result-screen") 
+            }),
             switchScreen(n) { 
-                Object.values(this.screens).forEach(s => s.classList.remove('active'));
-                const target = this.screens[n];
+                const screens = this.getScreens();
+                Object.values(screens).forEach(s => {
+                    if(s) s.classList.remove('active');
+                });
+                
+                const target = screens[n];
                 if(target) target.classList.add('active');
 
                 if (n === 'main' || n === 'result') {
@@ -341,9 +361,6 @@
                 $("#remaining-count").textContent = state.charsToPractice.length;
                 const box = $("#char-display"); box.innerHTML = '';
                 
-                // 移除了所有动态修改字号的逻辑
-                // 纯粹依赖 CSS 的 flex-wrap: wrap 和固定宽高
-
                 if (state.currentSubject === 'hanzi') {
                     for (const char of state.currentChar) {
                         const cell = document.createElement('div'); cell.className = 'char-cell-container';
@@ -390,11 +407,9 @@
             DB.setS(state.currentSubject, 'practiceHistory', h.slice(0,20));
             $("#final-time").textContent = UI.formatTime(state.seconds);
             $("#incorrect-list").textContent = state.incorrectThisSession.join('，') || '无';
-            $("#result-title").textContent = state.incorrectThisSession.length ? "加油！" : "全对！🎉";
+            $("#result-title").textContent = state.incorrectThisSession.length ? "也很棒，加油！🎉" : "太棒了，全对！🎉";
             
             UI.switchScreen('result');
-            
-            // 无论如何，只要结束就放烟花
             triggerFireworks();
         }
 
@@ -402,99 +417,134 @@
             const isMobilePortrait = window.matchMedia("(max-width: 768px) and (orientation: portrait)").matches;
             const isPracticeMode = document.body.classList.contains('practice-mode');
             
-            // 增加 zIndex 确保在顶层
-            const confettiConfig = { zIndex: 3000 };
+            const confettiConfig = { zIndex: 9999, disableForReducedMotion: true };
 
-            if (isPracticeMode && isMobilePortrait) {
-                // 手机竖屏时，从右(视觉上)往左飘
-                confetti({ 
-                    ...confettiConfig,
-                    particleCount: 150, 
-                    spread: 70, 
-                    angle: 180,               
-                    origin: { x: 0.9, y: 0.5 }, 
-                    gravity: 0,               
-                    drift: -2,                
-                    ticks: 300,
-                    scalar: 1.2
-                });
-            } else {
-                confetti({ 
-                    ...confettiConfig,
-                    particleCount: 150, 
-                    spread: 80, 
-                    origin: { y: 0.6 } 
-                });
-            }
+            setTimeout(() => {
+                if (isPracticeMode && isMobilePortrait) {
+                    // === 手机端修正：零重力中心爆炸 ===
+                    // 因为屏幕强制旋转，重力方向会乱，所以改为无重力(gravity:0)
+                    // 从屏幕中间向四周炸开，这样无论手机怎么拿都好看
+                    confetti({
+                        ...confettiConfig,
+                        particleCount: 50,    // 粒子数量适中
+                        spread: 360,          // 360度全方向爆炸
+                        startVelocity: 25,    // 爆发速度
+                        gravity: 0,           // 【关键】无重力，防止横向掉落
+                        decay: 0.92,          // 消失快一点
+                        origin: { x: 0.5, y: 0.5 }, // 屏幕正中心
+                        shapes: ['circle', 'square'],
+                        scalar: 1.2
+                    });
+                } else {
+                    // PC端：保持经典的顶部彩带雨
+                    confetti({ 
+                        ...confettiConfig, 
+                        particleCount: 100, 
+                        spread: 90, 
+                        gravity: 1,
+                        origin: { y: 0.6 } 
+                    });
+                }
+            }, 100);
         }
 
-        const bind = (id, fn) => {
-            const el = $(id);
-            if(el) el.onclick = fn;
-        };
+        const bind = (id, fn) => { const el = $(id); if(el) el.onclick = fn; };
         
-        bind('#select-hanzi', () => { state.currentSubject = 'hanzi'; UI.updateSetup(); UI.switchScreen('setup'); });
-        bind('#select-pinyin', () => { state.currentSubject = 'pinyin'; UI.updateSetup(); UI.switchScreen('setup'); });
-        bind('#select-english', () => { state.currentSubject = 'english'; UI.updateSetup(); UI.switchScreen('setup'); });
-        bind('#back-to-home-btn', () => UI.switchScreen('home'));
-        bind('#home-btn', () => UI.switchScreen('home'));
-        bind('#exit-session-btn', end);
-        bind('#correct-btn', () => answer(true));
-        bind('#incorrect-btn', () => answer(false));
-        bind('#start-btn', () => {
-            const els = document.querySelectorAll('.bank-item.selected');
-            if (!els.length) return alert('请选择词库');
-            const banks = DB.getS(state.currentSubject, 'wordBanks', {});
-            start(Array.from(els).flatMap(e => banks[e.dataset.name] || []), '练习');
-        });
-        bind('#practice-wrong-btn', () => {
-            const w = DB.getS(state.currentSubject, 'wrongChars', []);
-            w.length ? start(w, '错题本') : alert('无错题');
-        });
-        $('#bank-edit-select').onchange = (e) => UI.loadEditor(e.target.value);
-        bind('#save-bank-btn', () => {
-            const n = $('#edit-bank-name').value.trim(), c = $('#edit-bank-chars').value.trim().split(/\n+/).filter(Boolean);
-            if(n && c.length) { const b = DB.getS(state.currentSubject, 'wordBanks', {}); b[n] = c; DB.setS(state.currentSubject, 'wordBanks', b); UI.updateSetup(); alert('已保存'); }
-        });
-        bind('#delete-bank-btn', () => {
-            const n = $('#edit-bank-name').value;
-            if(n && confirm('删除?')) { const b = DB.getS(state.currentSubject, 'wordBanks', {}); delete b[n]; DB.setS(state.currentSubject, 'wordBanks', b); UI.updateSetup(); }
-        });
-        bind('#save-wrong-chars-btn', () => {
-            const c = $('#edit-wrong-chars').value.trim().split(/\n+/).filter(Boolean);
-            DB.setS(state.currentSubject, 'wrongChars', [...new Set(c)]); UI.updateSetup(); alert('已更新');
-        });
-        
-        bind('#export-data-btn', () => {
-            const d = {}; for(let i=0; i<localStorage.length; i++) d[localStorage.key(i)] = localStorage.getItem(localStorage.key(i));
-            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(d)], {type:"application/json"})); a.download = `Backup.json`; a.click();
-        });
-        
-        bind('#import-data-btn', () => $('#import-file-input').click());
-        $('#import-file-input').onchange = (e) => {
-            const r = new FileReader();
-            r.onload = (ev) => { 
-                if(confirm('导入将覆盖当前记录，确定吗?')) { 
-                    try {
-                        const data = JSON.parse(ev.target.result);
-                        localStorage.clear(); 
-                        Object.entries(data).forEach(([k,v]) => {
-                            const val = typeof v === 'object' ? JSON.stringify(v) : v;
-                            localStorage.setItem(k, val);
-                        });
-                        location.reload(); 
-                    } catch(err) {
-                        alert('文件格式错误: ' + err.message);
+        window.onload = async () => {
+            try {
+                bind('#select-hanzi', () => { state.currentSubject = 'hanzi'; UI.updateSetup(); UI.switchScreen('setup'); });
+                bind('#select-pinyin', () => { state.currentSubject = 'pinyin'; UI.updateSetup(); UI.switchScreen('setup'); });
+                bind('#select-english', () => { state.currentSubject = 'english'; UI.updateSetup(); UI.switchScreen('setup'); });
+                bind('#back-to-home-btn', () => UI.switchScreen('home'));
+                bind('#home-btn', () => UI.switchScreen('home'));
+                bind('#exit-session-btn', end);
+                bind('#correct-btn', () => answer(true));
+                bind('#incorrect-btn', () => answer(false));
+                bind('#start-btn', () => {
+                    const els = document.querySelectorAll('.bank-item.selected');
+                    if (!els.length) return alert('请选择词库');
+                    const banks = DB.getS(state.currentSubject, 'wordBanks', {});
+                    start(Array.from(els).flatMap(e => banks[e.dataset.name] || []), '练习');
+                });
+                bind('#practice-wrong-btn', () => {
+                    const w = DB.getS(state.currentSubject, 'wrongChars', []);
+                    w.length ? start(w, '错题本') : alert('无错题');
+                });
+                $('#bank-edit-select').onchange = (e) => UI.loadEditor(e.target.value);
+                bind('#save-bank-btn', () => {
+                    const n = $('#edit-bank-name').value.trim(), c = $('#edit-bank-chars').value.trim().split(/\n+/).filter(Boolean);
+                    if(n && c.length) { const b = DB.getS(state.currentSubject, 'wordBanks', {}); b[n] = c; DB.setS(state.currentSubject, 'wordBanks', b); UI.updateSetup(); alert('已保存'); }
+                });
+                bind('#delete-bank-btn', () => {
+                    const n = $('#edit-bank-name').value;
+                    if(n && confirm('删除?')) { const b = DB.getS(state.currentSubject, 'wordBanks', {}); delete b[n]; DB.setS(state.currentSubject, 'wordBanks', b); UI.updateSetup(); }
+                });
+                bind('#save-wrong-chars-btn', () => {
+                    const c = $('#edit-wrong-chars').value.trim().split(/\n+/).filter(Boolean);
+                    DB.setS(state.currentSubject, 'wrongChars', [...new Set(c)]); UI.updateSetup(); alert('已更新');
+                });
+                
+                bind('#export-data-btn', () => {
+                    const d = {}; 
+                    for(let i=0; i<localStorage.length; i++) d[localStorage.key(i)] = localStorage.getItem(localStorage.key(i));
+                    
+                    // === 修改：生成带时间的文件名 (格式: Backup_20231127_1530.json) ===
+                    const now = new Date();
+                    const timeStr = now.getFullYear() +
+                                    String(now.getMonth() + 1).padStart(2, '0') +
+                                    String(now.getDate()).padStart(2, '0') + '_' +
+                                    String(now.getHours()).padStart(2, '0') +
+                                    String(now.getMinutes()).padStart(2, '0');
+                                    
+                    const a = document.createElement('a'); 
+                    a.href = URL.createObjectURL(new Blob([JSON.stringify(d)], {type:"application/json"})); 
+                    a.download = `Backup_${timeStr}.json`; 
+                    a.click();
+                });
+                
+                bind('#import-data-btn', () => $('#import-file-input').click());
+                $('#import-file-input').onchange = (e) => {
+                    const r = new FileReader();
+                    r.onload = (ev) => { 
+                        if(confirm('导入将覆盖当前记录，确定吗?')) { 
+                            try {
+                                const data = JSON.parse(ev.target.result);
+                                localStorage.clear(); 
+                                Object.entries(data).forEach(([k,v]) => {
+                                    const val = typeof v === 'object' ? JSON.stringify(v) : v;
+                                    localStorage.setItem(k, val);
+                                });
+                                location.reload(); 
+                            } catch(err) {
+                                alert('文件格式错误: ' + err.message);
+                            }
+                        } 
+                    };
+                    if(e.target.files[0]) r.readAsText(e.target.files[0]);
+                };
+
+                bind('#force-fetch-btn', () => {
+                    if(confirm('确定要从 data.json 重新加载数据吗？\n这将覆盖当前的本地记录！')) {
+                        loadExternalData(true);
                     }
-                } 
-            };
-            if(e.target.files[0]) r.readAsText(e.target.files[0]);
+                });
+
+                await loadExternalData(false);
+                
+                if(!localStorage.getItem('hanzi_wordBanks')) DB.setS('hanzi', 'wordBanks', {'入门':['天','地','人']});
+                if(!localStorage.getItem('pinyin_wordBanks')) DB.setS('pinyin', 'wordBanks', {'单韵母':['a','o','e']});
+                if(!localStorage.getItem('english_wordBanks')) DB.setS('english', 'wordBanks', {'Test':['Cat','Dog']});
+                
+                UI.switchScreen('home');
+            } catch(e) {
+                console.error(e);
+                alert('初始化失败: ' + e.message);
+            }
         };
 
         async function loadExternalData(force = false) {
             try {
                 if (!force && localStorage.getItem('hanzi_wordBanks')) {
-                    console.log('本地已有数据，跳过自动加载。');
                     return;
                 }
                 const res = await fetch('data.json?t=' + new Date().getTime());
@@ -508,29 +558,11 @@
                         UI.toast('已加载 data.json 数据');
                         if(force) setTimeout(() => location.reload(), 1000);
                     }
-                } else {
-                    console.log('未找到 data.json');
-                    if(force) alert('未找到 data.json 文件');
                 }
             } catch (e) {
-                console.error('加载外部数据失败', e);
-                if(force) alert('加载失败: ' + e.message);
+                console.log('加载外部数据失败，使用本地缓存');
             }
         }
-
-        bind('#force-fetch-btn', () => {
-            if(confirm('确定要从 data.json 重新加载数据吗？\n这将覆盖当前的本地记录！')) {
-                loadExternalData(true);
-            }
-        });
-
-        window.onload = async () => {
-            await loadExternalData(false);
-            if(!localStorage.getItem('hanzi_wordBanks')) DB.setS('hanzi', 'wordBanks', {'入门':['天','地','人']});
-            if(!localStorage.getItem('pinyin_wordBanks')) DB.setS('pinyin', 'wordBanks', {'单韵母':['a','o','e']});
-            if(!localStorage.getItem('english_wordBanks')) DB.setS('english', 'wordBanks', {'Test':['Cat','Dog']});
-            UI.switchScreen('home');
-        };
     </script>
 </body>
 </html>
